@@ -1,3 +1,7 @@
+export NCURSES_NO_UTF8_ACS=1
+export LANG=ru_RU.UTF-8
+export LC_ALL=ru_RU.UTF-8 
+
 #!/bin/bash
 
 # === BSPWM INSTALLER FOR ARCH LINUX ===
@@ -77,27 +81,21 @@ fi
 
 # --- Проверка yay ---
 if ! command -v yay &>/dev/null; then
-  whiptail --title "Установка yay" --yesno "AUR helper yay не найден. Установить yay автоматически?" 10 60
-  if [[ $? -eq 0 ]]; then
-    # Проверка git и base-devel
-    for pkg in git base-devel; do
-      if ! pacman -Qi $pkg &>/dev/null; then
-        echo -e "${YELLOW}Устанавливаю $pkg...${NC}"
-        sudo pacman -Sy --noconfirm $pkg
-      fi
-    done
-    tmpdir=$(mktemp -d)
-    cd "$tmpdir"
+  whiptail --title "Установка yay" --infobox "AUR helper yay не найден. Устанавливаю yay..." 8 60
+  for pkg in git base-devel; do
+    if ! pacman -Qi $pkg &>/dev/null; then
+      sudo pacman -Sy --noconfirm $pkg
+    fi
+  done
+  tmpdir=$(mktemp -d)
+  chown $SUDO_USER:$SUDO_USER "$tmpdir"
+  sudo -u $SUDO_USER bash -c "
+    cd '$tmpdir'
     git clone https://aur.archlinux.org/yay.git
     cd yay
     makepkg -si --noconfirm
-    cd ~
-    rm -rf "$tmpdir"
-    echo -e "${GREEN}yay успешно установлен!${NC}"
-  else
-    echo -e "${RED}yay обязателен для работы скрипта. Выход.${NC}"
-    exit 1
-  fi
+  "
+  rm -rf "$tmpdir"
 fi
 
 # --- Функция выбора из списка ---
